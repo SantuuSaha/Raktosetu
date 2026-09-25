@@ -27,6 +27,7 @@ header{position:sticky;top:env(safe-area-inset-top,0px);background:color-mix(in 
 .logo{display:flex;align-items:center;gap:8px;font-family:'Fraunces',serif;font-weight:700;font-size:1.3rem;color:var(--red)}
 .logo .drop{animation:pulseDrop 2.2s ease-in-out infinite}
 .navlinks{display:flex;align-items:center;gap:16px;font-size:.92rem;font-weight:600}
+.lang-toggle{padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font-size:.82rem}
 .navlinks a{text-decoration:none;cursor:pointer;opacity:.8}
 .navlinks a:hover{opacity:1}
 .pill{display:flex;align-items:center;gap:8px;background:var(--red-light);color:var(--red);padding:6px 8px 6px 12px;border-radius:30px;font-size:.85rem;font-weight:700}
@@ -89,7 +90,7 @@ input:checked + .slider:before{transform:translateX(20px)}
 .tabs button.active{color:var(--red);border-bottom:2px solid var(--red)}
 .tabs button:hover{background:transparent;box-shadow:none;transform:none}
 footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
-@media(max-width:520px){.grid2{grid-template-columns:1fr}.hero h1{font-size:1.7rem}.navlinks{gap:10px;font-size:.8rem}}
+@media(max-width:680px){.nav{padding:10px 14px;gap:8px;align-items:flex-start}.logo{font-size:1.1rem;white-space:nowrap}.navlinks{gap:7px;flex-wrap:wrap;justify-content:flex-end;font-size:.78rem}.navlinks a{padding:5px 2px}.navlinks .small{padding:8px 10px;font-size:.78rem}.hero{padding:38px 14px 30px}.hero h1{font-size:clamp(1.55rem,7vw,2rem)}.hero p{font-size:.94rem;margin:10px auto 18px}.searchbar{display:grid;grid-template-columns:1fr;padding:12px}.searchbar input,.searchbar select{width:100%;min-width:0}.searchbar button{width:100%}section{padding:32px 14px}.wrap{padding:0 14px}.form-card{padding:18px}.donor-card{align-items:flex-start;padding:14px;gap:10px}.donor-info{min-width:0;overflow-wrap:anywhere}.tag{margin:5px 0 0}.cta-card{padding:22px 16px}.modal-overlay{padding:12px}.modal-box{padding:24px 18px}}@media(max-width:520px){.grid2{grid-template-columns:1fr}.navlinks a{display:none}.hero-svg{width:70px}.section-title{font-size:1.35rem}}
 </style>
 </head>
 <body>
@@ -98,6 +99,7 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
   <div class="nav">
     <div class="logo"><span class="drop">🩸</span> RaktoSetu</div>
     <div class="navlinks" id="navRight">
+      <button type="button" class="lang-toggle" id="langToggle" onclick="toggleLanguage()" aria-label="Switch language">বাংলা</button>
       <a href="#search">খুঁজুন</a>
       <a href="#donate">Become a Donor</a>
       <button class="small" id="navAuthBtn" onclick="openModal()">Login / Register</button>
@@ -112,7 +114,7 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
   </svg>
   <div class="wrap">
     <h1>জীবন বাঁচান, রক্ত দান করুন</h1>
-    <p>Find a blood donor near you in seconds — no login needed to search. Register once to appear in the directory yourself.</p>
+    <p id="heroCopy">Sign in to search the donor directory securely. Register once to appear in the directory yourself.</p>
     <div class="searchbar">
       <select id="sState" onchange="onSearchStateChange()"><option value="">All States</option></select>
       <input id="sCity" list="sCityList" placeholder="City e.g. Siliguri" autocomplete="off">
@@ -130,8 +132,8 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
 <section id="search">
   <div class="wrap">
     <h2 class="section-title">Donors Nearby</h2>
-    <p class="section-sub" id="resultCount">Search by city and blood group to see available donors — anyone can search, no account needed.</p>
-    <div class="results" id="results"><div class="empty">Type a city above and hit search.</div></div>
+    <p class="section-sub" id="resultCount">Sign in to search available donors by city, state, and blood group.</p>
+    <div class="results" id="results"><div class="empty" id="searchPrompt">Sign in to search the donor directory.</div></div>
   </div>
 </section>
 
@@ -208,6 +210,19 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
 <script>
+let currentLanguage = "en";
+function toggleLanguage(){currentLanguage=currentLanguage==="en"?"bn":"en";applyLanguage();}
+function applyLanguage(){
+ const bn=currentLanguage==="bn"; document.documentElement.lang=bn?"bn":"en";
+ const set=(selector,en,b)=>{const el=document.querySelector(selector);if(el)el.textContent=bn?b:en;};
+ set("#langToggle","বাংলা","English");
+ set("#heroCopy","Sign in to search the donor directory securely. Register once to appear in the directory yourself.","নিরাপদে রক্তদাতার তালিকা খুঁজতে সাইন ইন করুন। নিজেকে তালিকাভুক্ত করতে একবার নিবন্ধন করুন।");
+ set("#resultCount","Sign in to search available donors by city, state, and blood group.","শহর, রাজ্য ও রক্তের গ্রুপ অনুযায়ী রক্তদাতা খুঁজতে সাইন ইন করুন।");
+ set("#searchPrompt","Sign in to search the donor directory.","রক্তদাতার তালিকা খুঁজতে সাইন ইন করুন।");
+ set("#navRight a[href='#search']","Search","খুঁজুন"); set("#navRight a[href='#donate']","Become a Donor","রক্তদাতা হোন");
+ set("#navAuthBtn","Login / Register","লগইন / নিবন্ধন"); set(".hero h1","Donate blood, save lives","রক্ত দিন, জীবন বাঁচান");
+ set("#search .section-title","Donors Nearby","কাছাকাছি রক্তদাতা"); set("#donate .section-title","Become a Donor","রক্তদাতা হোন");
+}
 /* ====== 1) PASTE YOUR FIREBASE CONFIG HERE ======
    Get this from: Firebase Console -> Project settings -> Your apps -> (</>) Web app -> SDK setup and configuration
 */
@@ -278,6 +293,7 @@ function onFormStateChange(){ fillCityDatalist(fCityList, INDIA[fState.value]||T
 function onSearchStateChange(){ fillCityDatalist(sCityList, INDIA[sState.value]||TOP_CITIES); }
 fillStateSelect(fState); fillStateSelect(sState);
 fillCityDatalist(fCityList, TOP_CITIES); fillCityDatalist(sCityList, TOP_CITIES);
+applyLanguage();
 
 /* ====== 3) Modal open/close + tabs ====== */
 function openModal(mode){
@@ -318,9 +334,11 @@ auth.onAuthStateChanged(async (u)=>{
     ctaLoggedOut.style.display='block';
     formCard.style.display='none';
     authStatus.innerHTML='';
+    const prompt=document.getElementById('searchPrompt'); if(prompt)prompt.textContent=currentLanguage==='bn'?'রক্তদাতার তালিকা খুঁজতে সাইন ইন করুন।':'Sign in to search the donor directory.';
     return;
   }
   navAuthBtn.style.display='none';
+  const prompt=document.getElementById('searchPrompt'); if(prompt)prompt.textContent=currentLanguage==='bn'?'শহর, রাজ্য ও রক্তের গ্রুপ বেছে নিয়ে খুঁজুন।':'Choose a city, state, and blood group, then search.';
   ctaLoggedOut.style.display='none';
   formCard.style.display='block';
   authStatus.innerHTML = '<p class="status ok">Signed in as '+u.email+'</p>';
@@ -363,9 +381,14 @@ async function saveProfile(){
   }
 }
 
-/* ====== 6) Search donors (public — no login required) ====== */
+/* ====== 6) Search donors (signed-in users only) ====== */
 async function runSearch(){
   const results = document.getElementById('results');
+  if(!currentUser){
+    results.innerHTML = `<div class="empty">${currentLanguage==='bn'?'রক্তদাতার তালিকা খুঁজতে সাইন ইন করুন।':'Please sign in to search the donor directory.'}</div>`;
+    document.getElementById('resultCount').textContent=currentLanguage==='bn'?'সাইন ইন করতে লগইন / নিবন্ধন নির্বাচন করুন।':'Choose Login / Register to sign in.';
+    openModal('login'); return;
+  }
   const count = document.getElementById('resultCount');
   results.innerHTML = '<div class="empty">Searching…</div>';
   const city = sCity.value.trim().toLowerCase();
