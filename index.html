@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RaktoSetu — রক্তসেতু | Blood Donation Network</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --red:#b3212e; --red-dark:#7d1620; --red-light:#f7dfe0;
+  --red:#b3212e; --red-dark:#7d1620; --red-light:#f7dfe0; --gold:#e8a33d;
   --cream:#fdf8f3; --ink:#241512; --muted:#7a6660; --card:#ffffff; --line:#eee0d8;
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
@@ -17,37 +17,50 @@
 }
 :root[data-theme="dark"]{ --cream:#1c1210; --ink:#f3e8e3; --muted:#c2a9a0; --card:#271a17; --line:#3a2621; --red-light:#3a1c1f; }
 *{box-sizing:border-box}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
 body{margin:0;background:var(--cream);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.5}
 h1,h2,h3{font-family:'Fraunces',serif;margin:0}
 a{color:inherit}
-.wrap{max-width:1000px;margin:0 auto;padding:0 20px}
-header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--cream);border-bottom:1px solid var(--line);z-index:10}
-.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;max-width:1000px;margin:0 auto}
+.wrap{max-width:1020px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:color-mix(in srgb, var(--cream) 90%, transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:20}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;max-width:1020px;margin:0 auto}
 .logo{display:flex;align-items:center;gap:8px;font-family:'Fraunces',serif;font-weight:700;font-size:1.3rem;color:var(--red)}
-.navlinks{display:flex;gap:22px;font-size:.92rem;font-weight:600}
+.logo .drop{animation:pulseDrop 2.2s ease-in-out infinite}
+.navlinks{display:flex;align-items:center;gap:16px;font-size:.92rem;font-weight:600}
 .navlinks a{text-decoration:none;cursor:pointer;opacity:.8}
 .navlinks a:hover{opacity:1}
-.hero{padding:56px 20px 40px;text-align:center;background:linear-gradient(180deg,var(--red-light),var(--cream))}
+.pill{display:flex;align-items:center;gap:8px;background:var(--red-light);color:var(--red);padding:6px 8px 6px 12px;border-radius:30px;font-size:.85rem;font-weight:700}
+.dot{width:8px;height:8px;border-radius:50%;background:#2fa84f;flex-shrink:0}
+.dot.inactive{background:#b3a49c}
+@keyframes pulseDrop{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.hero{padding:54px 20px 40px;text-align:center;background:radial-gradient(circle at 50% 0%, var(--red-light), var(--cream) 70%);position:relative;overflow:hidden}
+.hero-svg{width:88px;margin:0 auto 14px;animation:float 3.4s ease-in-out infinite}
 .hero h1{font-size:2.3rem;line-height:1.15}
 .hero p{color:var(--muted);max-width:520px;margin:12px auto 26px;font-size:1.02rem}
-.searchbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;background:var(--card);padding:10px;border-radius:14px;max-width:640px;margin:0 auto;box-shadow:0 6px 20px rgba(0,0,0,.06);border:1px solid var(--line)}
-input,select,textarea{font-family:inherit;font-size:.95rem;padding:11px 13px;border:1px solid var(--line);border-radius:9px;background:var(--cream);color:var(--ink)}
+.searchbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;background:var(--card);padding:10px;border-radius:14px;max-width:660px;margin:0 auto;box-shadow:0 10px 30px rgba(179,33,46,.1);border:1px solid var(--line)}
+input,select,textarea{font-family:inherit;font-size:.95rem;padding:11px 13px;border:1px solid var(--line);border-radius:9px;background:var(--cream);color:var(--ink);transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red)}
 .searchbar input,.searchbar select{flex:1;min-width:130px}
-button{cursor:pointer;font-family:inherit;font-weight:700;border:none;border-radius:9px;padding:11px 18px;background:var(--red);color:#fff;font-size:.95rem;transition:background .15s}
-button:hover{background:var(--red-dark)}
+button{cursor:pointer;font-family:inherit;font-weight:700;border:none;border-radius:9px;padding:11px 18px;background:var(--red);color:#fff;font-size:.95rem;transition:transform .12s,box-shadow .12s,background .15s}
+button:hover{background:var(--red-dark);transform:translateY(-1px);box-shadow:0 6px 14px rgba(179,33,46,.25)}
+button:active{transform:translateY(0)}
 button.ghost{background:transparent;color:var(--red);border:1.5px solid var(--red)}
+button.ghost:hover{background:var(--red-light);box-shadow:none}
+button.small{padding:8px 14px;font-size:.85rem}
 section{padding:44px 20px}
 .section-title{font-size:1.5rem;margin-bottom:6px}
 .section-sub{color:var(--muted);font-size:.92rem;margin-bottom:22px}
 .results{display:grid;gap:12px}
-.donor-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px}
-.bg-badge{flex-shrink:0;width:52px;height:52px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Fraunces',serif}
+.donor-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;opacity:0;animation:fadeInUp .45s ease forwards;transition:transform .15s,box-shadow .15s}
+.donor-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.06)}
+.bg-badge{flex-shrink:0;width:52px;height:52px;border-radius:50%;background:linear-gradient(145deg,var(--red),var(--red-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Fraunces',serif}
 .donor-info b{font-size:1.02rem}
 .donor-info .muted{color:var(--muted);font-size:.85rem}
 .tag{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--red-light);color:var(--red);margin-left:6px}
 .empty{color:var(--muted);text-align:center;padding:30px;border:1px dashed var(--line);border-radius:12px}
-.form-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;max-width:560px;margin:0 auto}
+.form-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;max-width:560px;margin:0 auto;animation:fadeInUp .4s ease}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
 .field label{font-size:.8rem;font-weight:600;color:var(--muted)}
@@ -56,26 +69,50 @@ section{padding:44px 20px}
 .status{font-size:.85rem;padding:10px 12px;border-radius:8px;margin-bottom:14px}
 .status.ok{background:#e5f6ea;color:#1e6b34}
 .status.warn{background:#fff3e0;color:#8a5a00}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:14px 0}
+.switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:#cfc0ba;border-radius:24px;transition:.2s}
+.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked + .slider{background:#2fa84f}
+input:checked + .slider:before{transform:translateX(20px)}
+.cta-card{background:var(--card);border:1px dashed var(--red);border-radius:16px;padding:30px;max-width:480px;margin:0 auto;text-align:center}
+/* modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,10,8,.55);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s;padding:20px}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:var(--card);border-radius:18px;padding:28px;max-width:380px;width:100%;transform:translateY(16px) scale(.98);transition:transform .2s;position:relative;box-shadow:0 30px 60px rgba(0,0,0,.25)}
+.modal-overlay.open .modal-box{transform:translateY(0) scale(1)}
+.modal-close{position:absolute;top:14px;right:16px;background:transparent;color:var(--muted);padding:4px 8px;font-size:1.1rem}
+.modal-close:hover{background:var(--red-light);color:var(--red);box-shadow:none}
+.tabs{display:flex;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;background:transparent;color:var(--muted);border-radius:0;padding:10px}
+.tabs button.active{color:var(--red);border-bottom:2px solid var(--red)}
+.tabs button:hover{background:transparent;box-shadow:none;transform:none}
 footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
-@media(max-width:520px){.grid2{grid-template-columns:1fr}.hero h1{font-size:1.7rem}.navlinks{gap:12px;font-size:.82rem}}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}.hero h1{font-size:1.7rem}.navlinks{gap:10px;font-size:.8rem}}
 </style>
 </head>
 <body>
 
 <header>
   <div class="nav">
-    <div class="logo">🩸 RaktoSetu</div>
-    <div class="navlinks">
+    <div class="logo"><span class="drop">🩸</span> RaktoSetu</div>
+    <div class="navlinks" id="navRight">
       <a href="#search">খুঁজুন</a>
       <a href="#donate">Become a Donor</a>
+      <button class="small" id="navAuthBtn" onclick="openModal()">Login / Register</button>
     </div>
   </div>
 </header>
 
 <div class="hero">
+  <svg class="hero-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M50 8 C 50 8, 80 45, 80 65 A 30 30 0 1 1 20 65 C 20 45, 50 8, 50 8 Z" fill="var(--red)"/>
+    <ellipse cx="40" cy="60" rx="8" ry="12" fill="#ffffff" opacity=".25"/>
+  </svg>
   <div class="wrap">
     <h1>জীবন বাঁচান, রক্ত দান করুন</h1>
-    <p>Find a blood donor near you in seconds, or register yourself as a donor and help save a life.</p>
+    <p>Find a blood donor near you in seconds — no login needed to search. Register once to appear in the directory yourself.</p>
     <div class="searchbar">
       <select id="sState" onchange="onSearchStateChange()"><option value="">All States</option></select>
       <input id="sCity" list="sCityList" placeholder="City e.g. Siliguri" autocomplete="off">
@@ -93,7 +130,7 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
 <section id="search">
   <div class="wrap">
     <h2 class="section-title">Donors Nearby</h2>
-    <p class="section-sub" id="resultCount">Search by city and blood group to see available donors.</p>
+    <p class="section-sub" id="resultCount">Search by city and blood group to see available donors — anyone can search, no account needed.</p>
     <div class="results" id="results"><div class="empty">Type a city above and hit search.</div></div>
   </div>
 </section>
@@ -102,20 +139,15 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
   <div class="wrap">
     <h2 class="section-title" style="text-align:center">Become a Donor</h2>
     <p class="section-sub" style="text-align:center">Fill your details once — anyone searching your city can find you when they need blood.</p>
-    <div id="authStatus"></div>
 
-    <div class="form-card" id="authCard">
-      <div style="display:flex;gap:0;margin-bottom:18px;border-bottom:1px solid var(--line)">
-        <button type="button" id="tabLogin" onclick="switchTab('login')" style="flex:1;background:transparent;color:var(--red);border-bottom:2px solid var(--red);border-radius:0;padding:10px">Login</button>
-        <button type="button" id="tabRegister" onclick="switchTab('register')" style="flex:1;background:transparent;color:var(--muted);border-radius:0;padding:10px">Register</button>
-      </div>
-      <div class="field"><label>Email</label><input id="authEmail" type="email" placeholder="you@example.com"></div>
-      <div class="field"><label>Password</label><input id="authPass" type="password" placeholder="At least 6 characters"></div>
-      <button id="authBtn" onclick="doAuth()" style="width:100%">Login</button>
-      <div id="authMsg" style="margin-top:10px;font-size:.85rem"></div>
+    <div class="cta-card" id="ctaLoggedOut">
+      <h3 style="font-size:1.15rem;margin-bottom:8px">Register to list yourself</h3>
+      <p class="section-sub" style="margin-bottom:16px">Create a free account to add or edit your donor profile.</p>
+      <button onclick="openModal('register')">Login / Register</button>
     </div>
 
-    <div class="form-card" id="formCard" style="display:none;margin-top:16px">
+    <div id="authStatus"></div>
+    <div class="form-card" id="formCard" style="display:none">
       <div class="grid2">
         <div class="field"><label>Full Name</label><input id="fName"></div>
         <div class="field"><label>Phone Number</label><input id="fPhone" placeholder="10-digit mobile"></div>
@@ -134,6 +166,18 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
       <div class="field"><label>Any disease / medical condition (if none, write "None")</label><textarea id="fDisease" rows="2"></textarea></div>
       <div class="checkline"><input type="checkbox" id="fPrevDon"><label for="fPrevDon">I have donated blood before</label></div>
       <div class="checkline"><input type="checkbox" id="fReady"><label for="fReady">I am ready to donate blood now</label></div>
+
+      <div class="toggle-row">
+        <div>
+          <b style="font-size:.9rem">Listing status</b>
+          <div class="muted section-sub" style="margin:2px 0 0" id="statusHint">Active — visible to people searching</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="fActive" checked onchange="updateStatusHint()">
+          <span class="slider"></span>
+        </label>
+      </div>
+
       <button onclick="saveProfile()" style="width:100%;margin-top:8px">প্রোফাইল সেভ করুন / Save Profile</button>
       <div id="saveMsg" style="margin-top:10px;font-size:.85rem"></div>
       <button type="button" class="ghost" onclick="doLogout()" style="width:100%;margin-top:10px">Log out</button>
@@ -142,6 +186,21 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
 </section>
 
 <footer>🩸 RaktoSetu — a community blood-donor directory. Verify donor eligibility yourself before any donation.</footer>
+
+<!-- login / register modal -->
+<div class="modal-overlay" id="authModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="tabs">
+      <button type="button" id="tabLogin" class="active" onclick="switchTab('login')">Login</button>
+      <button type="button" id="tabRegister" onclick="switchTab('register')">Register</button>
+    </div>
+    <div class="field"><label>Email</label><input id="authEmail" type="email" placeholder="you@example.com"></div>
+    <div class="field"><label>Password</label><input id="authPass" type="password" placeholder="At least 6 characters"></div>
+    <button id="authBtn" onclick="doAuth()" style="width:100%">Login</button>
+    <div id="authMsg" style="margin-top:10px;font-size:.85rem"></div>
+  </div>
+</div>
 
 <!-- Firebase SDKs (compat build - simplest for plain HTML/JS) -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -152,7 +211,6 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
 /* ====== 1) PASTE YOUR FIREBASE CONFIG HERE ======
    Get this from: Firebase Console -> Project settings -> Your apps -> (</>) Web app -> SDK setup and configuration
 */
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyD1pdCyOuC4Bl6czEeL1j1QBZFcven4Q4Y",
   authDomain: "blood-donation-696e6.firebaseapp.com",
@@ -161,7 +219,7 @@ const firebaseConfig = {
   messagingSenderId: "1012293849489",
   appId: "1:1012293849489:web:7aff40d5fdf467d92b8a30",
   measurementId: "G-1Q41W1LFQZ"
-};	
+};
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const dbFs = firebase.firestore();
@@ -221,16 +279,25 @@ function onSearchStateChange(){ fillCityDatalist(sCityList, INDIA[sState.value]|
 fillStateSelect(fState); fillStateSelect(sState);
 fillCityDatalist(fCityList, TOP_CITIES); fillCityDatalist(sCityList, TOP_CITIES);
 
-/* ====== 3) Auth: login / register / logout ====== */
+/* ====== 3) Modal open/close + tabs ====== */
+function openModal(mode){
+  if(mode) authMode = mode;
+  switchTab(authMode);
+  authModal.classList.add('open');
+}
+function closeModal(){ authModal.classList.remove('open'); authMsg.textContent=''; }
 function switchTab(mode){
   authMode = mode;
-  tabLogin.style.color = mode==='login' ? 'var(--red)' : 'var(--muted)';
-  tabLogin.style.borderBottom = mode==='login' ? '2px solid var(--red)' : 'none';
-  tabRegister.style.color = mode==='register' ? 'var(--red)' : 'var(--muted)';
-  tabRegister.style.borderBottom = mode==='register' ? '2px solid var(--red)' : 'none';
+  tabLogin.classList.toggle('active', mode==='login');
+  tabRegister.classList.toggle('active', mode==='register');
   authBtn.textContent = mode==='login' ? 'Login' : 'Create Account';
   authMsg.textContent = '';
 }
+function updateStatusHint(){
+  statusHint.textContent = fActive.checked ? 'Active — visible to people searching' : 'Inactive — hidden from search results';
+}
+
+/* ====== 4) Auth: login / register / logout ====== */
 function doAuth(){
   const email = authEmail.value.trim(), pass = authPass.value;
   authMsg.style.color = 'var(--muted)';
@@ -239,7 +306,7 @@ function doAuth(){
   const action = authMode==='login'
     ? auth.signInWithEmailAndPassword(email, pass)
     : auth.createUserWithEmailAndPassword(email, pass);
-  action.then(()=>{ authMsg.textContent=''; })
+  action.then(()=>{ authMsg.textContent=''; closeModal(); })
         .catch(e=>{ authMsg.style.color='var(--red)'; authMsg.textContent = e.message; });
 }
 function doLogout(){ auth.signOut(); }
@@ -247,12 +314,14 @@ function doLogout(){ auth.signOut(); }
 auth.onAuthStateChanged(async (u)=>{
   currentUser = u;
   if(!u){
-    authCard.style.display='block';
+    navAuthBtn.style.display='inline-flex';
+    ctaLoggedOut.style.display='block';
     formCard.style.display='none';
     authStatus.innerHTML='';
     return;
   }
-  authCard.style.display='none';
+  navAuthBtn.style.display='none';
+  ctaLoggedOut.style.display='none';
   formCard.style.display='block';
   authStatus.innerHTML = '<p class="status ok">Signed in as '+u.email+'</p>';
   try{
@@ -263,11 +332,13 @@ auth.onAuthStateChanged(async (u)=>{
       fWeight.value=d.weight||''; fGroup.value=d.bloodGroup||''; fPin.value=d.pin||'';
       fState.value=d.state||''; onFormStateChange(); fCity.value=d.city||''; fDisease.value=d.disease||'';
       fPrevDon.checked=!!d.previouslyDonated; fReady.checked=!!d.readyToDonate;
+      fActive.checked = d.isActive !== false;
+      updateStatusHint();
     }
   }catch(e){}
 });
 
-/* ====== 4) Save donor profile ====== */
+/* ====== 5) Save donor profile ====== */
 async function saveProfile(){
   const msg = document.getElementById('saveMsg');
   if(!currentUser){ msg.textContent='Not signed in.'; return; }
@@ -280,19 +351,19 @@ async function saveProfile(){
     name:fName.value, phone:fPhone.value, age:fAge.value, weight:fWeight.value,
     bloodGroup:fGroup.value, pin:fPin.value, state:fState.value, city:fCity.value,
     disease:fDisease.value||'None', previouslyDonated:fPrevDon.checked, readyToDonate:fReady.checked,
-    updatedAt: Date.now()
+    isActive: fActive.checked, updatedAt: Date.now()
   };
   try{
     await dbFs.collection('donors').doc(currentUser.uid).set(data);
     msg.style.color = '#1e6b34';
-    msg.textContent = '✓ Saved! You are now listed in the donor directory.';
+    msg.textContent = '✓ Saved! ' + (fActive.checked ? 'You are listed in the donor directory.' : 'Your listing is now inactive and hidden from search.');
   }catch(e){
     msg.style.color = 'var(--red)';
     msg.textContent = 'Could not save: ' + e.message;
   }
 }
 
-/* ====== 5) Search donors ====== */
+/* ====== 6) Search donors (public — no login required) ====== */
 async function runSearch(){
   const results = document.getElementById('results');
   const count = document.getElementById('resultCount');
@@ -302,7 +373,7 @@ async function runSearch(){
   const group = sGroup.value;
   try{
     const snap = await dbFs.collection('donors').get();
-    let list = snap.docs.map(d=>d.data());
+    let list = snap.docs.map(d=>d.data()).filter(d => d.isActive !== false);
     if(city) list = list.filter(d => (d.city||'').toLowerCase().includes(city));
     if(state) list = list.filter(d => d.state === state);
     if(group) list = list.filter(d => d.bloodGroup === group);
@@ -312,8 +383,8 @@ async function runSearch(){
       return;
     }
     count.textContent = list.length+' donor(s) found';
-    results.innerHTML = list.map(d=>`
-      <div class="donor-card">
+    results.innerHTML = list.map((d,i)=>`
+      <div class="donor-card" style="animation-delay:${Math.min(i*0.06,0.6)}s">
         <div class="bg-badge">${d.bloodGroup||'?'}</div>
         <div class="donor-info">
           <b>${escapeHtml(d.name)}</b> ${d.readyToDonate?'<span class="tag">Ready to donate</span>':''}
