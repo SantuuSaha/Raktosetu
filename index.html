@@ -71,6 +71,20 @@ section{padding:44px 20px}
 .tag{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--red-light);color:var(--red);margin-left:6px}
 .empty{color:var(--muted);text-align:center;padding:30px;border:1px dashed var(--line);border-radius:12px}
 .form-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;max-width:560px;margin:0 auto;animation:fadeInUp .4s ease}
+.form-header{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.form-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(145deg,var(--red),var(--red-dark));display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;box-shadow:0 6px 16px rgba(179,33,46,.3)}
+.form-header h3{font-size:1.15rem}
+.form-group{margin-bottom:20px;padding-bottom:18px;border-bottom:1px dashed var(--line)}
+.form-group:last-of-type{border-bottom:none;margin-bottom:8px;padding-bottom:0}
+.form-group-title{font-size:.78rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.input-icon{position:relative}
+.input-icon input,.input-icon select{padding-left:38px;width:100%}
+.input-icon .ic{position:absolute;left:12px;top:38px;font-size:1rem;pointer-events:none;opacity:.75}
+.chip-check{position:absolute;opacity:0;width:0;height:0}
+.chip-label{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;font-size:.9rem;font-weight:600;color:var(--muted);transition:.15s;margin-bottom:10px;background:var(--cream)}
+.chip-label:hover{border-color:var(--red)}
+.chip-check:checked + .chip-label{border-color:var(--red);background:var(--red-light);color:var(--red)}
+.chip-label .chip-icon{font-size:1.2rem}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
 .field label{font-size:.8rem;font-weight:600;color:var(--muted)}
@@ -132,6 +146,11 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
   .modal-box{padding:22px;border-radius:16px;max-width:100%}
   .toggle-row{padding:10px 12px}
   .checkline{font-size:.88rem}
+  .form-header{gap:10px;margin-bottom:16px}
+  .form-avatar{width:42px;height:42px;font-size:1.1rem}
+  .form-header h3{font-size:1rem}
+  .chip-label{padding:11px 12px;font-size:.85rem}
+  .input-icon .ic{top:36px;font-size:.9rem}
 }
 @media(max-width:380px){
   .navlinks a{display:none}
@@ -197,24 +216,49 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
 
     <div id="authStatus"></div>
     <div class="form-card" id="formCard" style="display:none">
-      <div class="grid2">
-        <div class="field"><label data-i18n="lbl_name">Full Name</label><input id="fName"></div>
-        <div class="field"><label data-i18n="lbl_phone">Phone Number</label><input id="fPhone" placeholder="10-digit mobile"></div>
-        <div class="field"><label data-i18n="lbl_age">Age</label><input id="fAge" type="number" min="18" max="65"></div>
-        <div class="field"><label data-i18n="lbl_weight">Weight (kg)</label><input id="fWeight" type="number"></div>
-        <div class="field"><label data-i18n="lbl_group">Blood Group</label>
+      <div class="form-header">
+        <div class="form-avatar">🩸</div>
+        <div>
+          <h3 data-i18n="form_head">Your Donor Profile</h3>
+          <p class="section-sub" style="margin:0" data-i18n="form_sub">Keep it updated so people can reach you when it matters.</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-group-title">👤 <span data-i18n="grp_personal">Personal Details</span></div>
+        <div class="grid2">
+          <div class="field input-icon"><label data-i18n="lbl_name">Full Name</label><span class="ic">👤</span><input id="fName"></div>
+          <div class="field input-icon"><label data-i18n="lbl_phone">Phone Number</label><span class="ic">📱</span><input id="fPhone" placeholder="10-digit mobile"></div>
+          <div class="field input-icon"><label data-i18n="lbl_age">Age</label><span class="ic">🎂</span><input id="fAge" type="number" min="18" max="65"></div>
+          <div class="field input-icon"><label data-i18n="lbl_weight">Weight (kg)</label><span class="ic">⚖️</span><input id="fWeight" type="number"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-group-title">📍 <span data-i18n="grp_location">Location</span></div>
+        <div class="grid2">
+          <div class="field input-icon"><label data-i18n="lbl_pin">PIN Code</label><span class="ic">📮</span><input id="fPin"></div>
+          <div class="field input-icon"><label data-i18n="lbl_state">State</label><span class="ic">🗺️</span><select id="fState" onchange="onFormStateChange()"><option value="" data-i18n="opt_select_state">Select State</option></select></div>
+          <div class="field input-icon" style="grid-column:1/-1"><label data-i18n="lbl_city">City</label><span class="ic">🏙️</span><input id="fCity" list="fCityList" autocomplete="off"><datalist id="fCityList"></datalist></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-group-title">🏥 <span data-i18n="grp_health">Health &amp; Availability</span></div>
+        <div class="field input-icon"><label data-i18n="lbl_group">Blood Group</label><span class="ic">🩸</span>
           <select id="fGroup"><option value="" data-i18n="opt_select">Select</option>
             <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
             <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
           </select>
         </div>
-        <div class="field"><label data-i18n="lbl_pin">PIN Code</label><input id="fPin"></div>
-        <div class="field"><label data-i18n="lbl_state">State</label><select id="fState" onchange="onFormStateChange()"><option value="" data-i18n="opt_select_state">Select State</option></select></div>
-        <div class="field"><label data-i18n="lbl_city">City</label><input id="fCity" list="fCityList" autocomplete="off"><datalist id="fCityList"></datalist></div>
+        <div class="field"><label data-i18n="lbl_disease">Any disease / medical condition (if none, write "None")</label><textarea id="fDisease" rows="2"></textarea></div>
+
+        <input type="checkbox" id="fPrevDon" class="chip-check">
+        <label for="fPrevDon" class="chip-label"><span class="chip-icon">📋</span><span data-i18n="lbl_prevdon">I have donated blood before</span></label>
+
+        <input type="checkbox" id="fReady" class="chip-check">
+        <label for="fReady" class="chip-label"><span class="chip-icon">🩸</span><span data-i18n="lbl_ready">I am ready to donate blood now</span></label>
       </div>
-      <div class="field"><label data-i18n="lbl_disease">Any disease / medical condition (if none, write "None")</label><textarea id="fDisease" rows="2"></textarea></div>
-      <div class="checkline"><input type="checkbox" id="fPrevDon"><label for="fPrevDon" data-i18n="lbl_prevdon">I have donated blood before</label></div>
-      <div class="checkline"><input type="checkbox" id="fReady"><label for="fReady" data-i18n="lbl_ready">I am ready to donate blood now</label></div>
 
       <div class="toggle-row">
         <div>
@@ -316,6 +360,11 @@ const I18N = {
   lbl_disease:{en:'Any disease / medical condition (if none, write "None")',bn:'কোনো রোগ / শারীরিক সমস্যা থাকলে লিখুন (না থাকলে "None" লিখুন)'},
   lbl_prevdon:{en:"I have donated blood before",bn:"আমি আগে রক্ত দান করেছি"},
   lbl_ready:{en:"I am ready to donate blood now",bn:"আমি এখন রক্ত দিতে প্রস্তুত"},
+  form_head:{en:"Your Donor Profile",bn:"আপনার ডোনার প্রোফাইল"},
+  form_sub:{en:"Keep it updated so people can reach you when it matters.",bn:"প্রয়োজনের সময় যেন মানুষ আপনার সাথে যোগাযোগ করতে পারে, তাই তথ্য হালনাগাদ রাখুন।"},
+  grp_personal:{en:"Personal Details",bn:"ব্যক্তিগত তথ্য"},
+  grp_location:{en:"Location",bn:"অবস্থান"},
+  grp_health:{en:"Health & Availability",bn:"স্বাস্থ্য ও প্রস্তুতি"},
   lbl_status:{en:"Listing status",bn:"লিস্টিং স্ট্যাটাস"},
   status_active:{en:"Active — visible to people searching",bn:"সক্রিয় — সার্চে দেখা যাবে"},
   status_inactive:{en:"Inactive — hidden from search results",bn:"নিষ্ক্রিয় — সার্চ থেকে লুকানো থাকবে"},
