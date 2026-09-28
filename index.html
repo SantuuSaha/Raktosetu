@@ -66,6 +66,18 @@ section{padding:44px 20px}
 .donor-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;opacity:0;animation:fadeInUp .45s ease forwards;transition:transform .15s,box-shadow .15s}
 .donor-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.06)}
 .bg-badge{flex-shrink:0;width:52px;height:52px;border-radius:50%;background:linear-gradient(145deg,var(--red),var(--red-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Fraunces',serif}
+.stats-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.stat-box{flex:1;min-width:110px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
+.stat-num{font-family:'Fraunces',serif;font-size:1.7rem;color:var(--red);font-weight:700;line-height:1}
+.stat-label{font-size:.75rem;color:var(--muted);margin-top:4px}
+.donor-info{flex:1}
+.donor-actions{display:flex;gap:8px;margin-top:8px}
+.action-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:20px;font-size:.8rem;font-weight:700;text-decoration:none}
+.action-btn.call{background:var(--red-light);color:var(--red)}
+.action-btn.whatsapp{background:#dcf8e8;color:#1e6b34}
+.tag.eligible{background:#dcf8e8;color:#1e6b34}
+.tag.resting{background:#fff3e0;color:#8a5a00}
+.tag.dist{background:#e5eefb;color:#245a9c}
 .donor-info b{font-size:1.02rem}
 .donor-info .muted{color:var(--muted);font-size:.85rem}
 .tag{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--red-light);color:var(--red);margin-left:6px}
@@ -151,6 +163,12 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
   .form-header h3{font-size:1rem}
   .chip-label{padding:11px 12px;font-size:.85rem}
   .input-icon .ic{top:36px;font-size:.9rem}
+  .stats-bar{gap:8px}
+  .stat-box{padding:10px;min-width:0}
+  .stat-num{font-size:1.3rem}
+  .stat-label{font-size:.68rem}
+  .donor-actions{flex-wrap:wrap}
+  .action-btn{padding:8px 12px;font-size:.82rem;flex:1;justify-content:center}
 }
 @media(max-width:380px){
   .navlinks a{display:none}
@@ -191,6 +209,7 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
         <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
       </select>
       <button onclick="runSearch()" data-i18n="search_btn">খুঁজুন / Search</button>
+      <button type="button" class="ghost" onclick="useMyLocation()" id="nearMeBtn" data-i18n="near_me_btn">📍 Near Me</button>
     </div>
   </div>
 </div>
@@ -199,6 +218,11 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
   <div class="wrap">
     <h2 class="section-title" data-i18n="search_title">Donors Nearby</h2>
     <p class="section-sub" id="resultCount" data-i18n="search_sub_locked">Login to search donors by city and blood group.</p>
+    <div class="stats-bar" id="statsBar" style="display:none">
+      <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-label" data-i18n="stat_total">Total Donors</div></div>
+      <div class="stat-box"><div class="stat-num" id="statCities">0</div><div class="stat-label" data-i18n="stat_cities">Cities Covered</div></div>
+      <div class="stat-box"><div class="stat-num" id="statReady">0</div><div class="stat-label" data-i18n="stat_ready">Ready Now</div></div>
+    </div>
     <div class="results" id="results"><div class="empty" data-i18n="results_locked">🔒 Please login to search and view donor details.</div></div>
   </div>
 </section>
@@ -252,6 +276,7 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
           </select>
         </div>
         <div class="field"><label data-i18n="lbl_disease">Any disease / medical condition (if none, write "None")</label><textarea id="fDisease" rows="2"></textarea></div>
+        <div class="field input-icon"><label data-i18n="lbl_lastdonated">Last Donated On (optional)</label><span class="ic">🗓️</span><input id="fLastDonated" type="date"></div>
 
         <input type="checkbox" id="fPrevDon" class="chip-check">
         <label for="fPrevDon" class="chip-label"><span class="chip-icon">📋</span><span data-i18n="lbl_prevdon">I have donated blood before</span></label>
@@ -328,6 +353,60 @@ const auth = firebase.auth();
 const dbFs = firebase.firestore();
 let authMode = 'login';
 let currentUser = null;
+let userLat = null, userLng = null;
+
+/* ====== 1a) Free helper utilities (no API key needed) ====== */
+function distKm(lat1,lon1,lat2,lon2){
+  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+async function geocodeCity(city, state){
+  try{
+    const q = encodeURIComponent(city+', '+state+', India');
+    const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+q);
+    const arr = await res.json();
+    if(arr && arr[0]) return { lat: parseFloat(arr[0].lat), lng: parseFloat(arr[0].lon) };
+  }catch(e){}
+  return null;
+}
+function useMyLocation(){
+  if(!navigator.geolocation){ alert(currentLang==='bn' ? 'আপনার ব্রাউজার লোকেশন সাপোর্ট করে না।' : 'Geolocation not supported on this browser.'); return; }
+  nearMeBtn.textContent = currentLang==='bn' ? '📍 খোঁজা হচ্ছে…' : '📍 Locating…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+    nearMeBtn.textContent = currentLang==='bn' ? '📍 লোকেশন পাওয়া গেছে ✓' : '📍 Location set ✓';
+    if(currentUser) runSearch();
+  }, err=>{
+    nearMeBtn.textContent = I18N.near_me_btn[currentLang];
+    alert(currentLang==='bn' ? 'লোকেশন পাওয়া যায়নি।' : 'Could not get your location: ' + err.message);
+  });
+}
+function daysSince(dateStr){ return (Date.now() - new Date(dateStr).getTime()) / 86400000; }
+function eligibilityTag(lastDonated){
+  if(!lastDonated) return '';
+  const d = daysSince(lastDonated);
+  if(d >= 90) return `<span class="tag eligible">✅ ${I18N.eligible_now[currentLang]}</span>`;
+  const readyDate = new Date(new Date(lastDonated).getTime() + 90*86400000);
+  const dd = readyDate.toLocaleDateString(currentLang==='bn' ? 'bn-IN' : 'en-IN', {day:'numeric',month:'short'});
+  return `<span class="tag resting">⏳ ${I18N.eligible_after[currentLang]} ${dd}</span>`;
+}
+function waLink(phone){
+  let digits = (phone||'').replace(/\D/g,'');
+  if(digits.length===10) digits = '91'+digits;
+  if(digits.startsWith('0')) digits = '91'+digits.slice(1);
+  return 'https://wa.me/'+digits;
+}
+async function loadStats(){
+  try{
+    const snap = await dbFs.collection('donors').get();
+    const list = snap.docs.map(d=>d.data());
+    statTotal.textContent = list.length;
+    statCities.textContent = new Set(list.filter(d=>d.isActive!==false).map(d=>d.city).filter(Boolean)).size;
+    statReady.textContent = list.filter(d=>d.readyToDonate && d.isActive!==false).length;
+    statsBar.style.display = 'flex';
+  }catch(e){}
+}
 
 /* ====== 1b) Language toggle (EN / BN) ====== */
 let currentLang = localStorage.getItem('rs_lang') || 'bn';
@@ -375,7 +454,14 @@ const I18N = {
   tab_register:{en:"Register",bn:"রেজিস্টার"},
   field_email:{en:"Email",bn:"ইমেইল"},
   field_password:{en:"Password",bn:"পাসওয়ার্ড"},
-  forgot_link:{en:"Forgot password?",bn:"পাসওয়ার্ড ভুলে গেছেন?"}
+  forgot_link:{en:"Forgot password?",bn:"পাসওয়ার্ড ভুলে গেছেন?"},
+  stat_total:{en:"Total Donors",bn:"মোট ডোনার"},
+  stat_cities:{en:"Cities Covered",bn:"শহর কভার করা"},
+  stat_ready:{en:"Ready Now",bn:"এখন প্রস্তুত"},
+  near_me_btn:{en:"📍 Near Me",bn:"📍 কাছাকাছি"},
+  lbl_lastdonated:{en:"Last Donated On (optional)",bn:"সর্বশেষ রক্তদানের তারিখ (ঐচ্ছিক)"},
+  eligible_now:{en:"Eligible now",bn:"এখন উপযুক্ত"},
+  eligible_after:{en:"Eligible after",bn:"উপযুক্ত হবে"}
 };
 function applyLang(lang){
   currentLang = lang;
@@ -530,6 +616,7 @@ auth.onAuthStateChanged(async (u)=>{
   ctaLoggedOut.style.display='none';
   formCard.style.display='block';
   authStatus.innerHTML = '<p class="status ok">Signed in as '+u.email+'</p>';
+  loadStats();
   try{
     const doc = await dbFs.collection('donors').doc(u.uid).get();
     if(doc.exists){
@@ -539,6 +626,7 @@ auth.onAuthStateChanged(async (u)=>{
       fState.value=d.state||''; onFormStateChange(); fCity.value=d.city||''; fDisease.value=d.disease||'';
       fPrevDon.checked=!!d.previouslyDonated; fReady.checked=!!d.readyToDonate;
       fActive.checked = d.isActive !== false;
+      fLastDonated.value = d.lastDonated || '';
       updateStatusHint();
     }
   }catch(e){}
@@ -553,16 +641,22 @@ async function saveProfile(){
     msg.textContent = 'Please fill at least Name, Phone, City and Blood Group.';
     return;
   }
+  msg.style.color = 'var(--muted)';
+  msg.textContent = currentLang==='bn' ? 'সেভ হচ্ছে…' : 'Saving…';
   const data = {
     name:fName.value, phone:fPhone.value, age:fAge.value, weight:fWeight.value,
     bloodGroup:fGroup.value, pin:fPin.value, state:fState.value, city:fCity.value,
     disease:fDisease.value||'None', previouslyDonated:fPrevDon.checked, readyToDonate:fReady.checked,
+    lastDonated: fLastDonated.value || null,
     isActive: fActive.checked, updatedAt: Date.now()
   };
+  const geo = await geocodeCity(fCity.value, fState.value);
+  if(geo){ data.lat = geo.lat; data.lng = geo.lng; }
   try{
     await dbFs.collection('donors').doc(currentUser.uid).set(data);
     msg.style.color = '#1e6b34';
     msg.textContent = '✓ Saved! ' + (fActive.checked ? 'You are listed in the donor directory.' : 'Your listing is now inactive and hidden from search.');
+    loadStats();
   }catch(e){
     msg.style.color = 'var(--red)';
     msg.textContent = 'Could not save: ' + e.message;
@@ -589,6 +683,10 @@ async function runSearch(){
     if(city) list = list.filter(d => (d.city||'').toLowerCase().includes(city));
     if(state) list = list.filter(d => d.state === state);
     if(group) list = list.filter(d => d.bloodGroup === group);
+    if(userLat!=null){
+      list = list.map(d => ({...d, _dist: (d.lat && d.lng) ? distKm(userLat,userLng,d.lat,d.lng) : null}));
+      list.sort((a,b) => (a._dist ?? Infinity) - (b._dist ?? Infinity));
+    }
     if(list.length===0){
       results.innerHTML = '<div class="empty">No matching donors found yet. Ask people to register above!</div>';
       count.textContent = '0 donors found';
@@ -599,8 +697,15 @@ async function runSearch(){
       <div class="donor-card" style="animation-delay:${Math.min(i*0.06,0.6)}s">
         <div class="bg-badge">${d.bloodGroup||'?'}</div>
         <div class="donor-info">
-          <b>${escapeHtml(d.name)}</b> ${d.readyToDonate?'<span class="tag">Ready to donate</span>':''}
+          <b>${escapeHtml(d.name)}</b>
+          ${d.readyToDonate?'<span class="tag">Ready to donate</span>':''}
+          ${eligibilityTag(d.lastDonated)}
+          ${(d._dist!=null)?`<span class="tag dist">📍 ${d._dist.toFixed(1)} km</span>`:''}
           <div class="muted">📞 ${escapeHtml(d.phone)} &nbsp;|&nbsp; 📍 ${escapeHtml(d.city)}${d.state?', '+escapeHtml(d.state):''} &nbsp;|&nbsp; ${d.age?d.age+' yrs, ':''}${d.weight?d.weight+' kg':''}</div>
+          <div class="donor-actions">
+            <a class="action-btn call" href="tel:${escapeHtml((d.phone||'').replace(/\s/g,''))}">📞 Call</a>
+            <a class="action-btn whatsapp" href="${waLink(d.phone)}" target="_blank" rel="noopener">💬 WhatsApp</a>
+          </div>
         </div>
       </div>`).join('');
   }catch(e){
