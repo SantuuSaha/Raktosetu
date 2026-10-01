@@ -75,6 +75,20 @@ section{padding:44px 20px}
 .action-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:20px;font-size:.8rem;font-weight:700;text-decoration:none}
 .action-btn.call{background:var(--red-light);color:var(--red)}
 .action-btn.whatsapp{background:#dcf8e8;color:#1e6b34}
+.action-btn.report{background:#fdeaea;color:#a33;border:none;cursor:pointer;font-family:inherit}
+.admin-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;flex-wrap:wrap}
+.admin-row .ainfo{font-size:.85rem}
+.admin-row .ainfo b{display:block;font-size:.95rem}
+.admin-row .actions{display:flex;gap:6px;flex-wrap:wrap}
+.admin-row .actions button{padding:6px 10px;font-size:.78rem;min-height:0}
+.admin-modal-box{max-width:640px;max-height:85vh;overflow-y:auto}
+.admin-tabs{display:flex;margin-bottom:16px;border-bottom:1px solid var(--line)}
+.admin-tabs button{flex:1;background:transparent;color:var(--muted);border-radius:0;padding:10px}
+.admin-tabs button.active{color:var(--red);border-bottom:2px solid var(--red)}
+.admin-tabs button:hover{background:transparent;box-shadow:none;transform:none}
+.badge-pill{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px}
+.badge-pill.on{background:#dcf8e8;color:#1e6b34}
+.badge-pill.off{background:#eee;color:#888}
 .tag.eligible{background:#dcf8e8;color:#1e6b34}
 .tag.resting{background:#fff3e0;color:#8a5a00}
 .tag.dist{background:#e5eefb;color:#245a9c}
@@ -169,6 +183,10 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
   .stat-label{font-size:.68rem}
   .donor-actions{flex-wrap:wrap}
   .action-btn{padding:8px 12px;font-size:.82rem;flex:1;justify-content:center}
+  .admin-row{flex-direction:column;align-items:stretch}
+  .admin-row .actions{width:100%}
+  .admin-row .actions button{flex:1}
+  .admin-modal-box{max-height:90vh}
 }
 @media(max-width:380px){
   .navlinks a{display:none}
@@ -186,6 +204,7 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
       <a href="#donate" data-i18n="nav_donate">Become a Donor</a>
       <button class="icon-btn" id="langBtn" onclick="toggleLang()" title="Change language">বাং/EN</button>
       <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
+      <button class="small ghost" id="adminBtn" onclick="openAdminModal()" style="display:none">🛡️ Admin</button>
       <button class="small" id="navAuthBtn" onclick="openModal()" data-i18n="nav_login">Login / Register</button>
     </div>
   </div>
@@ -330,6 +349,34 @@ footer{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem;b
   </div>
 </div>
 
+<!-- report donor modal -->
+<div class="modal-overlay" id="reportModal" onclick="if(event.target===this)closeReportModal()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeReportModal()">✕</button>
+    <h3 style="font-size:1.1rem;margin-bottom:6px">🚩 Report this listing</h3>
+    <p class="section-sub" id="reportDonorName" style="margin-bottom:14px"></p>
+    <div class="field"><label>What's wrong?</label>
+      <textarea id="reportReason" rows="3" placeholder="e.g. Wrong number, fake profile, not responding..."></textarea>
+    </div>
+    <button onclick="submitReport()" style="width:100%">Submit Report</button>
+    <div id="reportMsg" style="margin-top:10px;font-size:.85rem"></div>
+  </div>
+</div>
+
+<!-- admin panel modal -->
+<div class="modal-overlay" id="adminModal" onclick="if(event.target===this)closeAdminModal()">
+  <div class="modal-box admin-modal-box">
+    <button class="modal-close" onclick="closeAdminModal()">✕</button>
+    <h3 style="font-size:1.2rem;margin-bottom:14px">🛡️ Admin Panel</h3>
+    <div class="admin-tabs">
+      <button type="button" id="adminTabDonors" class="active" onclick="switchAdminTab('donors')">All Donors</button>
+      <button type="button" id="adminTabReports" onclick="switchAdminTab('reports')">Reports</button>
+    </div>
+    <div id="adminDonorsList"><div class="empty">Loading…</div></div>
+    <div id="adminReportsList" style="display:none"><div class="empty">Loading…</div></div>
+  </div>
+</div>
+
 <!-- Firebase SDKs (compat build - simplest for plain HTML/JS) -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
@@ -406,6 +453,125 @@ async function loadStats(){
     statReady.textContent = list.filter(d=>d.readyToDonate && d.isActive!==false).length;
     statsBar.style.display = 'flex';
   }catch(e){}
+}
+
+/* ====== 1e) Admin check (based on Firestore, not a hardcoded password) ====== */
+let isAdmin = false;
+async function checkAdmin(uid){
+  try{
+    const doc = await dbFs.collection('admins').doc(uid).get();
+    return doc.exists;
+  }catch(e){ return false; }
+}
+
+/* ====== 1f) Report a donor listing ====== */
+let reportTargetUid = null;
+function openReportModal(uid, name){
+  if(!currentUser){ openModal('login'); return; }
+  reportTargetUid = uid;
+  reportDonorName.textContent = 'Reporting: ' + name;
+  reportReason.value = '';
+  reportMsg.textContent = '';
+  reportModal.classList.add('open');
+}
+function closeReportModal(){ reportModal.classList.remove('open'); }
+async function submitReport(){
+  if(!reportTargetUid){ return; }
+  if(!reportReason.value.trim()){ reportMsg.style.color='#8a5a00'; reportMsg.textContent='Please describe the issue.'; return; }
+  reportMsg.style.color = 'var(--muted)';
+  reportMsg.textContent = 'Submitting…';
+  try{
+    await dbFs.collection('reports').add({
+      donorId: reportTargetUid,
+      reason: reportReason.value.trim(),
+      reporterUid: currentUser.uid,
+      reporterEmail: currentUser.email,
+      status: 'open',
+      createdAt: Date.now()
+    });
+    reportMsg.style.color = '#1e6b34';
+    reportMsg.textContent = '✓ Thank you — our admin will review this.';
+    setTimeout(closeReportModal, 1400);
+  }catch(e){
+    reportMsg.style.color = 'var(--red)';
+    reportMsg.textContent = 'Could not submit: ' + e.message;
+  }
+}
+
+/* ====== 1g) Admin Panel ====== */
+function openAdminModal(){ adminModal.classList.add('open'); switchAdminTab('donors'); }
+function closeAdminModal(){ adminModal.classList.remove('open'); }
+function switchAdminTab(tab){
+  adminTabDonors.classList.toggle('active', tab==='donors');
+  adminTabReports.classList.toggle('active', tab==='reports');
+  adminDonorsList.style.display = tab==='donors' ? 'block' : 'none';
+  adminReportsList.style.display = tab==='reports' ? 'block' : 'none';
+  if(tab==='donors') loadAdminDonors(); else loadAdminReports();
+}
+async function loadAdminDonors(){
+  adminDonorsList.innerHTML = '<div class="empty">Loading…</div>';
+  try{
+    const snap = await dbFs.collection('donors').get();
+    const list = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    if(list.length===0){ adminDonorsList.innerHTML = '<div class="empty">No donors yet.</div>'; return; }
+    adminDonorsList.innerHTML = list.map(d=>`
+      <div class="admin-row">
+        <div class="ainfo">
+          <b>${escapeHtml(d.name||'(no name)')} <span class="badge-pill ${d.isActive!==false?'on':'off'}">${d.isActive!==false?'Active':'Inactive'}</span></b>
+          ${escapeHtml(d.phone||'')} · ${escapeHtml(d.city||'')} · ${escapeHtml(d.bloodGroup||'')}
+        </div>
+        <div class="actions">
+          <button class="ghost" onclick="toggleDonorActive('${d.id}', ${d.isActive===false})">${d.isActive!==false?'Deactivate':'Activate'}</button>
+          <button style="background:#a33" onclick="deleteDonorDoc('${d.id}')">Delete</button>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    adminDonorsList.innerHTML = '<div class="empty">Could not load: '+escapeHtml(e.message)+'</div>';
+  }
+}
+async function toggleDonorActive(uid, makeActive){
+  try{
+    await dbFs.collection('donors').doc(uid).update({ isActive: makeActive });
+    loadAdminDonors(); loadStats();
+  }catch(e){ alert('Failed: '+e.message); }
+}
+async function deleteDonorDoc(uid){
+  if(!confirm('Permanently delete this donor listing?')) return;
+  try{
+    await dbFs.collection('donors').doc(uid).delete();
+    loadAdminDonors(); loadStats();
+  }catch(e){ alert('Failed: '+e.message); }
+}
+async function loadAdminReports(){
+  adminReportsList.innerHTML = '<div class="empty">Loading…</div>';
+  try{
+    const snap = await dbFs.collection('reports').orderBy('createdAt','desc').get();
+    const list = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    if(list.length===0){ adminReportsList.innerHTML = '<div class="empty">No reports.</div>'; return; }
+    adminReportsList.innerHTML = list.map(r=>`
+      <div class="admin-row">
+        <div class="ainfo">
+          <b>${r.status==='open'?'🟠 Open':'✅ Resolved'}</b>
+          ${escapeHtml(r.reason||'')}<br>
+          <span class="muted">Reported by ${escapeHtml(r.reporterEmail||'unknown')} · Donor ID: ${escapeHtml(r.donorId||'')}</span>
+        </div>
+        <div class="actions">
+          <button class="ghost" onclick="toggleDonorActive('${r.donorId}', false)">Deactivate Donor</button>
+          <button onclick="resolveReport('${r.id}')">Mark Resolved</button>
+          <button style="background:#a33" onclick="deleteReport('${r.id}')">Delete</button>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    adminReportsList.innerHTML = '<div class="empty">Could not load: '+escapeHtml(e.message)+'</div>';
+  }
+}
+async function resolveReport(id){
+  try{ await dbFs.collection('reports').doc(id).update({status:'resolved'}); loadAdminReports(); }
+  catch(e){ alert('Failed: '+e.message); }
+}
+async function deleteReport(id){
+  try{ await dbFs.collection('reports').doc(id).delete(); loadAdminReports(); }
+  catch(e){ alert('Failed: '+e.message); }
 }
 
 /* ====== 1b) Language toggle (EN / BN) ====== */
@@ -610,6 +776,8 @@ auth.onAuthStateChanged(async (u)=>{
     ctaLoggedOut.style.display='block';
     formCard.style.display='none';
     authStatus.innerHTML='';
+    adminBtn.style.display='none';
+    isAdmin = false;
     return;
   }
   navAuthBtn.style.display='none';
@@ -617,6 +785,8 @@ auth.onAuthStateChanged(async (u)=>{
   formCard.style.display='block';
   authStatus.innerHTML = '<p class="status ok">Signed in as '+u.email+'</p>';
   loadStats();
+  isAdmin = await checkAdmin(u.uid);
+  adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
   try{
     const doc = await dbFs.collection('donors').doc(u.uid).get();
     if(doc.exists){
@@ -679,7 +849,7 @@ async function runSearch(){
   const group = sGroup.value;
   try{
     const snap = await dbFs.collection('donors').get();
-    let list = snap.docs.map(d=>d.data()).filter(d => d.isActive !== false);
+    let list = snap.docs.map(d=>({...d.data(), _uid:d.id})).filter(d => d.isActive !== false);
     if(city) list = list.filter(d => (d.city||'').toLowerCase().includes(city));
     if(state) list = list.filter(d => d.state === state);
     if(group) list = list.filter(d => d.bloodGroup === group);
@@ -705,6 +875,7 @@ async function runSearch(){
           <div class="donor-actions">
             <a class="action-btn call" href="tel:${escapeHtml((d.phone||'').replace(/\s/g,''))}">📞 Call</a>
             <a class="action-btn whatsapp" href="${waLink(d.phone)}" target="_blank" rel="noopener">💬 WhatsApp</a>
+            <button type="button" class="action-btn report" onclick="openReportModal('${d._uid||''}','${escapeHtml(d.name).replace(/'/g,"\\'")}')">🚩 Report</button>
           </div>
         </div>
       </div>`).join('');
